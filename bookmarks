@@ -33,3 +33,57 @@ automationで検索
 Outlookを開き、受信トレイ内で右クリックし、「ルールの作成」を選択します。
 「条件の選択」ウィンドウで、「件名に含む」を選択し、特定のキーワードやフレーズを入力します。
 次に、「アクションの選択」ウィンドウで、「スクリプトを実行」を選択し、実行したいスクリプトを指定します。
+
+
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+
+(async () => {
+  // Puppeteerを起動
+  const browser = await puppeteer.launch();
+
+  // 新しいページを開く
+  const page = await browser.newPage();
+
+  // 指定URLにアクセス
+  await page.goto('https://example.com');
+
+  // HTMLを取得
+  const html = await page.content();
+
+  // HTMLをファイルに保存
+  fs.writeFileSync('downloaded.html', html);
+
+  // Puppeteerを終了
+  await browser.close();
+
+  console.log('HTMLをダウンロードしました。');
+})();
+
+
+
+このコードを実行するには、以下の手順に従ってください。
+
+Node.jsをインストールします。Node.jsは、JavaScriptランタイム環境であり、このコードを実行するために必要です。Node.jsの公式ウェブサイト（https://nodejs.org/）からインストーラーをダウンロードしてインストールしてください。
+
+プロジェクトディレクトリを作成します。任意の名前のディレクトリを作成し、そのディレクトリに移動します。
+
+依存関係をインストールします。プロジェクトディレクトリ内で、以下のコマンドを実行して、Puppeteerをインストールします。
+
+Copy code
+npm install puppeteer
+コードをエディタにコピー＆ペーストします。先ほど提供したコードをテキストエディタにコピーし、新しいファイルに貼り付けます。
+
+ファイルを保存します。ファイルを任意の名前（例えば、download_html.js）で保存します。
+
+コマンドラインを開きます。作成したプロジェクトディレクトリ内で、コマンドラインを開いてください。
+
+Node.jsでスクリプトを実行します。以下のコマンドを使用して、先ほど保存したスクリプトを実行します。
+
+Copy code
+node download_html.js
+実行が完了すると、同じディレクトリに downloaded.html という名前のファイルが生成され、指定されたURLのHTMLがその中にダウンロードされます。
+
+
+
+
