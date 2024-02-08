@@ -16,3 +16,6 @@ print(data)
 
 # 接続のクローズ
 conn.close()
+
+
+SQL Server構成マネージャー
