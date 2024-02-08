@@ -1,1 +1,18 @@
 https://qiita.com/koara-local/items/ae48162d848872cc29fd
+
+
+import pyodbc
+import pandas as pd
+
+# ODBC接続の設定
+conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=your_server;DATABASE=your_database;UID=your_username;PWD=your_password')
+
+# SQLクエリの実行と結果の取得
+query = 'SELECT * FROM your_table'
+data = pd.read_sql(query, conn)
+
+# 結果の表示
+print(data)
+
+# 接続のクローズ
+conn.close()
