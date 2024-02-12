@@ -1,89 +1,89 @@
-https://qiita.com/koara-local/items/ae48162d848872cc29fd
-
-
-https://qiita.com/zaki-lknr/items/8950f6acea20961a8afc
-
-https://zenn.dev/soags/articles/e4862faa3e8c9d
-
-import pyodbc
+import asyncio
 import pandas as pd
-
-# ODBC接続の設定
-conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=your_server;DATABASE=your_database;UID=your_username;PWD=your_password')
-
-# SQLクエリの実行と結果の取得
-query = 'SELECT * FROM your_table'
-data = pd.read_sql(query, conn)
-
-# 結果の表示
-print(data)
-
-# 接続のクローズ
-conn.close()
+from playwright.async_api import async_playwright
 
 
-SQL Server構成マネージャー
+async def extract_table_data():
+    try:
+        async with async_playwright() as playwright:
+            browser = await playwright.firefox.launch(headless=True)  # Launching in non-headless mode to visually verify the table
+            #page = await browser.new_page()
+            context = await browser.new_context(java_script_enabled=True)  # Enable JavaScript
+            # Create a new page within the context
+            page = await context.new_page()
+            # Navigate to the webpage containing the table
+            res = await page.goto("https://www.nseindia.com/resources/exchange-communication-holidays")
+            if res.status != 200:
+                print('Failed to load page!')
+                print(res)
+            else:
+                # Wait for the table to be visible
+                await page.wait_for_selector('#holidayTable')
+                await page.wait_for_timeout(1000)
+                # Extracting data from the table
+                data = await page.evaluate('''() => {
+                    const rows = Array.from(document.querySelectorAll('#holidayTable tbody tr'));
+                    return rows.map(row => {
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        return cells.map(cell => cell.textContent.trim());
+                    });
+                }''')
+                # Printing the extracted data
+                df = pd.DataFrame(data, columns=['Sr. No', 'Date', 'Day', 'Description'])
+                print(df)
+    except Exception as e:
+        print("エラーが発生しました:", e)
+    finally:
+        await browser.close()
+        
 
-
-Azure Automation
-
-automationで検索
-
-
-Outlookを開き、受信トレイ内で右クリックし、「ルールの作成」を選択します。
-「条件の選択」ウィンドウで、「件名に含む」を選択し、特定のキーワードやフレーズを入力します。
-次に、「アクションの選択」ウィンドウで、「スクリプトを実行」を選択し、実行したいスクリプトを指定します。
-
-
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-
-(async () => {
-  // Puppeteerを起動
-  const browser = await puppeteer.launch();
-
-  // 新しいページを開く
-  const page = await browser.newPage();
-
-  // 指定URLにアクセス
-  await page.goto('https://example.com');
-
-  // HTMLを取得
-  const html = await page.content();
-
-  // HTMLをファイルに保存
-  fs.writeFileSync('downloaded.html', html);
-
-  // Puppeteerを終了
-  await browser.close();
-
-  console.log('HTMLをダウンロードしました。');
-})();
-
-
-
-このコードを実行するには、以下の手順に従ってください。
-
-Node.jsをインストールします。Node.jsは、JavaScriptランタイム環境であり、このコードを実行するために必要です。Node.jsの公式ウェブサイト（https://nodejs.org/）からインストーラーをダウンロードしてインストールしてください。
-
-プロジェクトディレクトリを作成します。任意の名前のディレクトリを作成し、そのディレクトリに移動します。
-
-依存関係をインストールします。プロジェクトディレクトリ内で、以下のコマンドを実行して、Puppeteerをインストールします。
-
-Copy code
-npm install puppeteer
-コードをエディタにコピー＆ペーストします。先ほど提供したコードをテキストエディタにコピーし、新しいファイルに貼り付けます。
-
-ファイルを保存します。ファイルを任意の名前（例えば、download_html.js）で保存します。
-
-コマンドラインを開きます。作成したプロジェクトディレクトリ内で、コマンドラインを開いてください。
-
-Node.jsでスクリプトを実行します。以下のコマンドを使用して、先ほど保存したスクリプトを実行します。
-
-Copy code
-node download_html.js
-実行が完了すると、同じディレクトリに downloaded.html という名前のファイルが生成され、指定されたURLのHTMLがその中にダウンロードされます。
+asyncio.run(extract_table_data())
 
 
 
 
+
+#https://www.bseindia.com/static/markets/marketinfo/listholi.aspx
+
+import asyncio
+import pandas as pd
+from playwright.async_api import async_playwright
+
+
+async def extract_table_data():
+    async with async_playwright() as playwright:
+        browser = await playwright.firefox.launch(headless=True)  # Launching in non-headless mode to visually verify the table
+        #page = await browser.new_page()
+        context = await browser.new_context(java_script_enabled=True)  # Enable JavaScript
+        # Create a new page within the context
+        page = await context.new_page()
+        # Navigate to the webpage containing the table
+        res = await page.goto("https://www.bseindia.com/static/markets/marketinfo/listholi.aspx")
+        if res.status != 200:
+            print('Failed to load page!')
+            print(res)
+        else:
+            try:
+                # Wait for the table to be visible
+                await page.wait_for_selector('xpath=/html/body/form/div[4]/div/div/div[3]/div/div/div/div/table[1]')
+                await page.wait_for_timeout(1000)
+                # Extracting data from the table
+                # テーブル内のデータを取得する
+                table_data = await page.evaluate('''() => {
+                    const rows = Array.from(document.querySelectorAll('table tbody tr'));
+                    return rows.map(row => {
+                        const rowData = Array.from(row.querySelectorAll('td'));
+                        return rowData.map(cell => cell.innerText.trim());
+                    });
+                }''') 
+                # データフレームを作成するために有効な行をフィルタリングする
+                valid_rows = [row for row in table_data if len(row) == 4]
+                # 最初の行を列名として除外して、データフレームを作成する
+                df = pd.DataFrame(valid_rows[1:], columns=valid_rows[0])
+                print(df)
+            except Exception as e:
+                print("エラーが発生しました:", e)
+        await browser.close()
+        
+
+asyncio.run(extract_table_data())
