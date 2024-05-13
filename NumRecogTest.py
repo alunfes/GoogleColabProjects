@@ -8,35 +8,40 @@ import numpy as np
 import cv2
 import pyautogui
 import os
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 
-class Net(nn.Module):
+class SimpleNN(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
-        self.linear1 = nn.Linear(64, 128)
-        self.linear2 = nn.Linear(128, 32)  # 入力サイズを32に修正
-        #self.linear3 = nn.Linear(128, 64)  # 入力サイズを32に修正
-        self.linear4 = nn.Linear(32, 10)  # 入力サイズを32に修正
+        super(SimpleNN, self).__init__()
+        self.fc1 = nn.Linear(784, 256)  # Increased the number of neurons in the first hidden layer
+        self.fc2 = nn.Linear(256, 128)  # Added a dropout layer to reduce overfitting
+        self.dropout = nn.Dropout(0.2)  # Dropout probability of 0.2
+        self.fc3 = nn.Linear(128, 10)
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))  # 線形変換と活性化関数を同時に適用
-        x = F.relu(self.linear2(x))  # 線形変換と活性化関数を同時に適用
-        #x = F.relu(self.linear3(x))  # 線形変換と活性化関数を同時に適用
-        x = self.linear4(x)
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)  # Apply dropout
+        x = torch.relu(self.fc2(x))
+        x = self.dropout(x)  # Apply dropout
+        x = self.fc3(x)
         return x
 
-model = Net()
+model = SimpleNN()
 
 # モデルの読み込み
-model_path = './num.pth'
+model_path = './digits.pth'
 model.load_state_dict(torch.load(model_path))
 model.eval()
 
 # キャンバスの幅と高さ
-canvas_width = 200
-canvas_height = 200
+canvas_width = 392
+canvas_height = 392
 
-image1 = Image.new("RGB", (canvas_width, canvas_height), (255, 255, 255))
+image1 = Image.new("L", (canvas_width, canvas_height), (255))  # "L"はグレースケールを表します
 draw = ImageDraw.Draw(image1)
 
 image_counter = 0
@@ -45,8 +50,8 @@ image_counter = 0
 def paint(event):
     x1, y1 = (event.x - 10), (event.y - 10)
     x2, y2 = (event.x + 10), (event.y + 10)
-    canvas.create_oval(x1, y1, x2, y2, fill="black", width=5)
-    draw.line([x1, y1, x2, y2], fill="black", width=5)
+    canvas.create_oval(x1, y1, x2, y2, fill="black", width=1)
+    draw.line([x1, y1, x2, y2], fill="black", width=1)
 
 def clear_canvas():
     canvas.delete("all")  # キャンバス上のすべての描画を削除
@@ -79,7 +84,6 @@ def save_canvas_image():
     screenshot.save(image_path)
     image_counter += 1
 
-
 # 数字の予測を行う関数
 def predict_digit():
     # キャンバス上のピクセル値を取得
@@ -87,19 +91,23 @@ def predict_digit():
     capture_canvas_image()
     # OpenCVで画像を読み込み、処理
     img = cv2.imread("canvas_screenshot.png")
-    img = cv2.resize(img, (8, 8))  # 学習時の入力サイズに合わせる
+    img = cv2.resize(img, (28, 28))  # 学習時の入力サイズに合わせる
     img = cv2.bitwise_not(img)  # 白黒を反転させる
     img = np.float32(img)
-    img = img / 255.0  # 正規化
-    img = img.reshape(-1, 64)  # モデルの入力サイズに変換
+    img = np.mean(img, axis=2)
+    mask = img > 0
+    img[mask] = 1
+    img[~mask] = 0
+    img = img.reshape(-1, 784)  # モデルの入力サイズに変換
     # モデルに画像を渡して予測
     with torch.no_grad():
         predictions = model(torch.tensor(img))
     # 各バッチの最大値を取得して予測値を得る
     predicted_digits = torch.argmax(predictions, dim=1).tolist()
     # 予測結果を表示
-    print(predictions)
     result_label.config(text=f"Predicted Digits: {predicted_digits}")
+    # バーチャートを更新
+    update_bar_chart(predictions[0])
 
 # GUIのセットアップ
 root = tk.Tk()
@@ -107,23 +115,39 @@ root.title("Handwritten Digit Recognition")
 
 # キャンバスの設定
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height, bg='white')
-canvas.pack(expand=tk.YES, fill=tk.BOTH)
+canvas.pack(side=tk.LEFT, expand=tk.YES, fill=tk.BOTH)
 canvas.bind("<B1-Motion>", paint)
+
+# 出力の表示用フレーム
+output_frame = tk.Frame(root)
+output_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
 # Clearボタンの作成と配置
 clear_button = tk.Button(root, text="Clear", command=clear_canvas)
-clear_button.pack()
+clear_button.pack(side=tk.BOTTOM)
 
 # Saveボタンの作成と配置
 save_button = tk.Button(root, text="Save", command=save_canvas_image)
-save_button.pack()
+save_button.pack(side=tk.BOTTOM)
 
 # 予測結果の表示ラベル
 result_label = tk.Label(root, text="Predicted Digit: None", font=("Helvetica", 16))
-result_label.pack()
+result_label.pack(side=tk.BOTTOM)
 
 # 予測ボタン
 predict_button = tk.Button(root, text="Predict", command=predict_digit)
-predict_button.pack()
+predict_button.pack(side=tk.BOTTOM)
+
+# バーチャートの設定
+fig, ax = plt.subplots(figsize=(4, 4))
+canvas_bar = FigureCanvasTkAgg(fig, master=output_frame)
+canvas_bar.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+def update_bar_chart(predictions):
+    ax.clear()
+    ax.bar(range(10), predictions.detach().numpy())
+    ax.set_xticks(range(10))
+    ax.set_title('Prediction Probabilities')
+    canvas_bar.draw()
 
 root.mainloop()
