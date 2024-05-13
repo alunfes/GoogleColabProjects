@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 import numpy as np
 import cv2
 import pyautogui
-
+import os
 
 
 class Net(nn.Module):
@@ -39,6 +39,8 @@ canvas_height = 200
 image1 = Image.new("RGB", (canvas_width, canvas_height), (255, 255, 255))
 draw = ImageDraw.Draw(image1)
 
+image_counter = 0
+
 # マウスのドラッグ操作のコールバック関数
 def paint(event):
     x1, y1 = (event.x - 10), (event.y - 10)
@@ -60,6 +62,23 @@ def capture_canvas_image():
     # スクリーンショットをPIL Imageに変換して保存
     screenshot.save("canvas_screenshot.png")
 
+def save_canvas_image():
+    global image_counter
+    # キャンバス上の画像を保存するディレクトリ
+    save_dir = "canvas_images"
+    os.makedirs(save_dir, exist_ok=True)
+    image_path = os.path.join(save_dir, f"canvas_image_{image_counter}.png")
+    # キャンバスの位置とサイズを取得
+    canvas_x = canvas.winfo_rootx()
+    canvas_y = canvas.winfo_rooty()
+    canvas_width = canvas.winfo_width()
+    canvas_height = canvas.winfo_height()
+    # キャンバスの範囲を指定してスクリーンショットを撮影
+    screenshot = pyautogui.screenshot(region=(canvas_x, canvas_y, canvas_width, canvas_height))
+    # スクリーンショットをPIL Imageに変換して保存
+    screenshot.save(image_path)
+    image_counter += 1
+
 
 # 数字の予測を行う関数
 def predict_digit():
@@ -79,7 +98,7 @@ def predict_digit():
     # 各バッチの最大値を取得して予測値を得る
     predicted_digits = torch.argmax(predictions, dim=1).tolist()
     # 予測結果を表示
-    print(predicted_digits)
+    print(predictions)
     result_label.config(text=f"Predicted Digits: {predicted_digits}")
 
 # GUIのセットアップ
@@ -95,6 +114,9 @@ canvas.bind("<B1-Motion>", paint)
 clear_button = tk.Button(root, text="Clear", command=clear_canvas)
 clear_button.pack()
 
+# Saveボタンの作成と配置
+save_button = tk.Button(root, text="Save", command=save_canvas_image)
+save_button.pack()
 
 # 予測結果の表示ラベル
 result_label = tk.Label(root, text="Predicted Digit: None", font=("Helvetica", 16))
