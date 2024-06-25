@@ -1,54 +1,21 @@
-Sub ScheduleMeeting()
-    Dim olApp As Object
-    Dim olNs As Object
-    Dim olAppt As Object
+hackathonでSales Assistant AIのプレゼンを行います。
 
-    ' Outlookアプリケーションを取得
-    On Error Resume Next
-    Set olApp = GetObject(, "Outlook.Application")
-    If olApp Is Nothing Then
-        Set olApp = CreateObject("Outlook.Application")
-    End If
-    On Error GoTo 0
+以下の構成でプレゼンテーションスライドを作成してください。
 
-    ' Outlookネームスペースを取得
-    Set olNs = olApp.GetNamespace("MAPI")
+・営業が顧客と挨拶をして名刺を交換する
 
-    ' 新しい予定を作成
-    Set olAppt = olApp.CreateItem(1) ' 1はolAppointmentItemを示す
+・AIに名刺を渡して、AIがそれを解析してDBに顧客情報を登録する
 
-    ' Excelのセルから情報を取得
-    Dim subject As String
-    Dim location As String
-    Dim startTime As Date
-    Dim endTime As Date
-    Dim body As String
+・次に営業が顧客とメールで案件についてのやり取りをする。
 
-    ' セルの値を読み取る（例：A1からE1）
-    subject = ThisWorkbook.Sheets("Sheet1").Range("A1").Value
-    location = ThisWorkbook.Sheets("Sheet1").Range("B1").Value
-    startTime = ThisWorkbook.Sheets("Sheet1").Range("C1").Value
-    endTime = ThisWorkbook.Sheets("Sheet1").Range("D1").Value
-    body = ThisWorkbook.Sheets("Sheet1").Range("E1").Value
+・AIはDBから特定の顧客に関するメールのやり取りを分析して、今までのやりとりのサマリー、次に顧客に送るべきメールの生成、提案すべき商品の推薦、などを提示する
 
-    ' 予定のプロパティを設定
-    With olAppt
-        .Subject = subject
-        .Location = location
-        .Start = startTime
-        .End = endTime
-        .Body = body
-        .ReminderSet = True
-        .ReminderMinutesBeforeStart = 15
-        .BusyStatus = 2 ' 2はBusyを示す
-        .Save
-    End With
+・営業は顧客とin personのmeetingを行う。
 
-    ' メッセージボックスで確認
-    MsgBox "ミーティングが作成されました: " & subject
+・AIはmeetingから議事録を作成するとともに、次のミーティングにおける顧客への提案内容の推薦、follow upメールの生成を行う。
 
-    ' オブジェクトをクリーンアップ
-    Set olAppt = Nothing
-    Set olNs = Nothing
-    Set olApp = Nothing
-End Sub
+・次に営業は顧客をディナーに誘い、接待することで関係を深めます
+
+・営業は昨夜のディナーの領収書をAIに渡します。AIは顧客に紐づくコストをCMSに登録するとともに、顧客へのfollow upメールの生成と次のディナー誘いのタイミングとお店を営業に提案します。
+
+・営業はAIを活用することで見事案件を獲得することができました
