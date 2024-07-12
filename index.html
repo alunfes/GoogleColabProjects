@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask AI for Funds</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        
+        .sidebar {
+            width: 200px;
+            background-color: #0e1117;
+            padding: 20px;
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar button {
+            width: 100%;
+            padding: 8px;
+            background-color: #262730;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .app-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .chat-container {
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .message-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+        }
+        
+        .user-icon {
+            background-color: #4a90e2;
+            color: white;
+        }
+        
+        .ai-icon {
+            background-color: #50c878;
+            color: white;
+        }
+        
+        .message-content {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .user-message .message-content {
+            background-color: #3a3a3a;
+        }
+        
+        .ai-message .message-content {
+            background-color: #333333;
+        }
+        
+        .data-visualization {
+            position: relative;
+        }
+
+        .export-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4a4a4a;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .export-button:hover {
+            background-color: #666;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+        
+        th, td {
+            border: 1px solid #444;
+            padding: 6px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #333;
+        }
+        
+        .graph {
+            width: 100%;
+            height: 200px;
+        }
+        
+        .new-message {
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .new-message input {
+            width: 100%;
+            padding: 8px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+
+        .right-space {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>ファンドデータ AI</h2>
+        <ul>
+            <li><button>過去のチャット履歴</button></li>
+            <li><button>PDFにエクスポート</button></li>
+            <li><button>メールで送信</button></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div class="app-title">Ask AI for Funds</div>
+        
+        <div class="chat-container">
+            <div class="message user-message">
+                <div class="message-icon user-icon"><i class="fas fa-user"></i></div>
+                <div class="message-content">
+                    最新の上位5ファンドのパフォーマンスデータを表示してください。
+                </div>
+            </div>
+            <div class="message ai-message">
+                <div class="message-icon ai-icon"><i class="fas fa-robot"></i></div>
+                <div class="message-content">
+                    承知しました。JPMファンドの最新の上位5ファンドのパフォーマンスデータを表形式で表示します。
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-visualization">
+            <button class="export-button">Export</button>
+            <table>
+                <tr>
+                    <th>ランク</th>
+                    <th>ファンド名</th>
+                    <th>年間収益率</th>
+                    <th>AUM (百万円)</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>JPM・US テクノロジー・ファンド</td>
+                    <td>22.5%</td>
+                    <td>25,000</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>JPM・グローバル・ヘルスケア・ファンド</td>
+                    <td>18.7%</td>
+                    <td>18,500</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>JPM・チャイナ・ファンド</td>
+                    <td>16.9%</td>
+                    <td>15,000</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>JPM・ユーロ・ダイナミック・ファンド</td>
+                    <td>15.2%</td>
+                    <td>12,000</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>JPM・アジア成長ファンド</td>
+                    <td>14.8%</td>
+                    <td>10,500</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="chat-container">
+            <div class="message user-message">
+                <div class="message-icon user-icon"><i class="fas fa-user"></i></div>
+                <div class="message-content">
+                    上位3ファンドの年間収益率を棒グラフで表示してください。
+                </div>
+            </div>
+            <div class="message ai-message">
+                <div class="message-icon ai-icon"><i class="fas fa-robot"></i></div>
+                <div class="message-content">
+                    了解しました。上位3ファンドの年間収益率を棒グラフで表示します。
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-visualization">
+            <button class="export-button">Export</button>
+            <canvas id="fundChart" class="graph"></canvas>
+        </div>
+        
+        <div class="new-message">
+            <input type="text" placeholder="メッセージを入力してください...">
+        </div>
+    </div>
+
+    <div class="right-space"></div>
+
+    <script>
+        var ctx = document.getElementById('fundChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['JPM・US テクノロジー', 'JPM・グローバル・ヘルスケア', 'JPM・チャイナ'],
+                datasets: [{
+                    label: '年間収益率',
+                    data: [22.5, 18.7, 16.9],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '年間収益率 (%)',
+                            color: '#ffffff'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '上位3ファンドの年間収益率',
+                        color: '#ffffff'
+                    },
+                    legend: {
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
