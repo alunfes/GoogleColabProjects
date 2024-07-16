@@ -95,3 +95,36 @@ DataFrameはpandasの最も重要なデータ構造で、二次元の表形式�
 データ型:
 各列が異なるデータ型を持つことができます。
 
+
+
+
+import pandas as pd
+
+def classify_status(row, df_old):
+    if row['Engagement ID'] in df_old['Engagement ID'].values:
+        old_phase = df_old.loc[df_old['Engagement ID'] == row['Engagement ID'], 'Phase'].iloc[0]
+        if row['Phase'] == old_phase:
+            return row['Phase']
+        else:
+            return f"new {row['Phase'].lower()}"
+    else:
+        return f"new {row['Phase'].lower()}"
+
+def compare_and_classify(df_old, df_new):
+    # New Statusカラムを追加
+    df_new['New Status'] = df_new.apply(lambda row: classify_status(row, df_old), axis=1)
+    
+    # 消失したエンゲージメントを特定
+    disappeared = df_old[~df_old['Engagement ID'].isin(df_new['Engagement ID'])]
+    disappeared['New Status'] = 'disappeared'
+    
+    # 結果を結合
+    result = pd.concat([df_new, disappeared[['Engagement ID', 'Phase', 'New Status']]])
+    
+    return result
+
+# 使用例
+# df_old = pd.read_csv('old_inventory.csv')
+# df_new = pd.read_csv('new_inventory.csv')
+# result = compare_and_classify(df_old, df_new)
+# result.to_csv('classified_inventory.csv', index=False)
